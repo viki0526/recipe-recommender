@@ -10,7 +10,7 @@ import logging
 app = Flask(__name__)
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:loc@lpass@localhost/recipes'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Dagger@localhost/RecipesApp'
 
 db = SQLAlchemy(app)
 
