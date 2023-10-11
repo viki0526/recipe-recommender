@@ -10,29 +10,30 @@ import logging
 app = Flask(__name__)
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Dagger@localhost/RecipesApp'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Dagger@localhost:5432/RecipesApp'
 
 db = SQLAlchemy(app)
 
 # Define schema
-class Recipe:
+class Recipe(db.Model):
     __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key=True)
-    link = db.Column(db.String, unique=True)
-    site = db.Column(db.String, unique=True)
-    source = db.Column(db.String, unique=True)
-    def __init__(self, link, site, source):
+    name = db.Column(db.String)
+    link = db.Column(db.String)
+    site = db.Column(db.String)
+    def __init__(self, id, name, link, site):
+        self.id = id
+        self.name = name
         self.link = link
         self.site = site
-        self.source = source
 
-class Ingredient:
+class Ingredient(db.Model):
     __tablename__ = 'ingredients'
     name = db.Column(db.String, primary_key=True)
     def __init__(self, name):
         self.name = name
 
-class RecipeIngredient:
+class RecipeIngredient(db.Model):
     __tablename__ = 'recipe_ingredients'
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True)
     ingredient = db.Column(db.String, db.ForeignKey('ingredients.name'), primary_key = True)
