@@ -1,0 +1,4 @@
+DEBUG:root:Created dfs
+DEBUG:root:Created ingredients table
+DEBUG:root:Created recipes table
+DEBUG:root:Created recipe_ingredients table
