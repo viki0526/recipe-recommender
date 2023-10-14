@@ -6,13 +6,13 @@ export default function SelectIngredients () {
     const [selectedTags, setSelectedTags] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [options, setOptions] = useState([
-        'Ingredients 1',
-        'Ingredients 2',
-        'Ingredients 3',
-        'Ingredients 4',
-        'Ingredients 5',
-        'Ingredients 6',
-        'Ingredients 7',
+        'milk',
+        'butter',
+        'rice',
+        'milo',
+        'buscuit',
+        'molasses',
+        'macadamia nuts'
     ]);
 
     useEffect(() => {
@@ -20,15 +20,14 @@ export default function SelectIngredients () {
         .then((response) => response.json())
         .then((data) => {
             // Handle the response from the Flask server
-            console.log(data);
-            setText(data.result)
-            setResultOpacity(1)
+            setOptions(data);
+            console.log(data)
         })
         .catch((error) => {
             // Handle any errors
             console.error('Error:', error);
         });
-    })
+    }, [])
 
     const handleDropdownSelect = (e, selectedOption) => {
         e.preventDefault()
@@ -43,7 +42,7 @@ export default function SelectIngredients () {
     };
 
     const filteredOptions = options.filter((option) =>
-        option.toLowerCase().includes(searchTerm.toLowerCase())
+        option.trim().toLowerCase().startsWith(searchTerm.toLowerCase())
     );
 
     return (
@@ -73,7 +72,7 @@ export default function SelectIngredients () {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     value={searchTerm}
                     />
-                    {filteredOptions.map((option) => (
+                    {filteredOptions.sort((a, b) => a.length - b.length).slice(0, 5).map((option) => (
                     <Dropdown.Item
                         key={option}
                         onClick={(e) => handleDropdownSelect(e, option)}

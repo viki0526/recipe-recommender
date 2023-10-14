@@ -7,12 +7,16 @@ from sqlalchemy import create_engine
 
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 
-
 def main():
+    # Create schema
+    db.create_all()
+
+    # Read data and clean up NER column
     df = pd.read_csv('RecipesDataset/recipes_data.csv')
     df['NER'] = df['NER'].apply(lambda x: set(ast.literal_eval(x)))
     df = df[df['NER'] != set()]
 
+    # Create dataframes for each table
     all_ingredients = set.union(*df['NER'].tolist())
     ingredients_df = pd.DataFrame(list(all_ingredients), columns=['name'])
 
@@ -27,6 +31,7 @@ def main():
 
     logging.debug('Created dfs')
 
+    # Create tables
     ingredients_df.to_sql('ingredients', engine, if_exists='append', index=False)
     logging.debug('Created ingredients table')
 
@@ -37,6 +42,6 @@ def main():
     logging.debug('Created recipe_ingredients table')
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='migrate.log', level=logging.DEBUG)
+    logging.basicConfig(filename='app.log', level=logging.DEBUG)
     with app.app_context():
         main()
