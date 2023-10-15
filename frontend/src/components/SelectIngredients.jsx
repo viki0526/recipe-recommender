@@ -15,20 +15,6 @@ export default function SelectIngredients () {
         'macadamia nuts'
     ]);
 
-    useEffect(() => {
-        fetch('http://127.0.0.1:5000/get-ingredients')
-        .then((response) => response.json())
-        .then((data) => {
-            // Handle the response from the Flask server
-            setOptions(data);
-            console.log(data)
-        })
-        .catch((error) => {
-            // Handle any errors
-            console.error('Error:', error);
-        });
-    }, [])
-
     const handleDropdownSelect = (e, selectedOption) => {
         e.preventDefault()
         if (!selectedTags.includes(selectedOption)) {
@@ -41,9 +27,24 @@ export default function SelectIngredients () {
         setSelectedTags(updatedTags);
     };
 
-    const filteredOptions = options.filter((option) =>
-        option.trim().toLowerCase().startsWith(searchTerm.toLowerCase())
-    );
+    const handleSearch = (query) => {
+        setSearchTerm(query);
+        console.log(query);
+        fetch('http://127.0.0.1:5000/search-ingredients', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ searchQuery: query }),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            setOptions(data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
 
     return (
         <div className='select-container'>
@@ -69,10 +70,12 @@ export default function SelectIngredients () {
                     style={{margin: '0 10px', width: 'fit-content'}}
                     autoFocus
                     placeholder="Search..."
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    name="searchQuery"
+                    // onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => handleSearch(e.target.value)}
                     value={searchTerm}
                     />
-                    {filteredOptions.sort((a, b) => a.length - b.length).slice(0, 5).map((option) => (
+                    {options.map((option) => (
                     <Dropdown.Item
                         key={option}
                         onClick={(e) => handleDropdownSelect(e, option)}
