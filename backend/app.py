@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine
+from sqlalchemy import text
 from sqlalchemy.orm import relationship
 import logging
 import json
@@ -17,6 +17,14 @@ engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 conn = engine.connect() 
 
 logging.basicConfig(filename='app.log', level=logging.DEBUG)
+logging.getLogger('flask_cors').level = logging.DEBUG
+
+def setup_postgres_extensions():
+    conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
+
+with app.app_context():
+    setup_postgres_extensions()
+
 
 # Define schema
 class Recipe(db.Model):
@@ -50,13 +58,18 @@ class RecipeIngredient(db.Model):
 def main():
     return {'message': 'hello world'}, 200
 
-@app.route('/get-ingredients')
-def get_ingredients():
-    query = Ingredient.query.all()
-    obj = [x.name for x in query]
-    logging.debug(obj)
-    return jsonify(obj), 200
+@app.route('/search-ingredients', methods=['POST'])
+def search_ingredients():
+    query = request.get_json().get("searchQuery")
+    logging.debug(f'REQUEST: {request.get_json().get("searchQuery")}')
 
+    sql = text(
+        "SELECT * FROM ingredients ORDER BY SIMILARITY(name, :str) DESC LIMIT 5;"
+    )
+    result = conn.execute(sql, {'str': query})
+    logging.debug(result)
+    result_list = [x.name for x in result]
+    return jsonify(result_list), 200
 
 @app.route('/recipes', methods=['POST'])
 def find_recipes():

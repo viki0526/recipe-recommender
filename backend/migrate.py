@@ -44,7 +44,6 @@ def main():
     # Read data and clean up NER column
     df = pd.read_csv('RecipesDataset/recipes_data.csv')
     df['NER'] = df['NER'].apply(lambda x: set(ast.literal_eval(x)))
-    df = df[df['NER'] != set()]
     df['NER'] = df['NER'].apply(remove_non_alphabet)
 
     # Create validation set of over 1500 ingredients
@@ -52,6 +51,7 @@ def main():
 
     # Clean up NER column by matching to ingredient validation set
     df['NER'] = df['NER'].apply(lambda x: check_ingredients(x, all_ingredients))
+    df = df[df['NER'] != set()]
 
     # Create dataframes for each table
     ingredients_df = pd.DataFrame(list(all_ingredients), columns=['name'])
