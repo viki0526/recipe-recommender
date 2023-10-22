@@ -1,19 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import '../css/SelectIngredients.css';
-import { Dropdown, FormControl } from 'react-bootstrap';
+import '../css/Filters.css';
+import { Dropdown, FormControl} from 'react-bootstrap';
 
-export default function SelectIngredients () {
+export default function SideBar () {
     const [selectedTags, setSelectedTags] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [options, setOptions] = useState([
-        'milk',
-        'butter',
-        'rice',
-        'milo',
-        'buscuit',
-        'molasses',
-        'macadamia nuts'
-    ]);
+    const [options, setOptions] = useState([]);
+
+    // Ingredient Filter Functions --------------------------------
 
     const handleDropdownSelect = (e, selectedOption) => {
         e.preventDefault()
@@ -47,7 +41,7 @@ export default function SelectIngredients () {
     }
 
     return (
-        <div className='select-container'>
+        <div className='sidebar-container'>
             <div>
             {selectedTags.map((tag) => (
                 <span key={tag} className="tag">
@@ -71,7 +65,6 @@ export default function SelectIngredients () {
                     autoFocus
                     placeholder="Search..."
                     name="searchQuery"
-                    // onChange={(e) => setSearchTerm(e.target.value)}
                     onChange={(e) => handleSearch(e.target.value)}
                     value={searchTerm}
                     />
@@ -86,6 +79,5 @@ export default function SelectIngredients () {
                 </Dropdown.Menu>
             </Dropdown>
         </div>
-    );
+    )
 }
-

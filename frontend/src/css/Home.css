@@ -1,0 +1,11 @@
+.home-container {
+    margin: 20px 0;
+}
+
+.home-container .recipe-search {
+    justify-content: center;
+}
+
+.flex {
+    display: flex;
+}
