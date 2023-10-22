@@ -10,6 +10,25 @@ from sqlalchemy import create_engine
 
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 
+# For cleaning up recipe titles
+def remove_extra_whitespace(input_string):
+    cleaned_string = re.sub(r'\s+', ' ', input_string.strip())
+    return cleaned_string.lower()
+
+def replace_non_alpha_parentheses(input_string):
+    cleaned_string = re.sub(r'[^a-zA-Z() ]', '', input_string)
+    return cleaned_string
+
+def remove_null_chars(s):
+    new_list = []
+    for x in s:
+        if '\x00' in x:
+            new_list.append(x.replace('\x00', ""))
+        else:
+            new_list.append(x)
+    return new_list
+#-----------------------------#
+
 def remove_non_alphabet(s):
     return {re.sub(r'[^a-zA-Z ]', '', word) for word in s}
 
@@ -44,6 +63,9 @@ def main():
     # Read data and clean up NER column
     df = pd.read_csv('RecipesDataset/recipes_data.csv')
     df['NER'] = df['NER'].apply(lambda x: set(ast.literal_eval(x)))
+    df['ingredients'] = df['ingredients'].apply(lambda x: ast.literal_eval(x))
+    df['directions'] = df['directions'].apply(lambda x: ast.literal_eval(x))
+
     df['NER'] = df['NER'].apply(remove_non_alphabet)
 
     # Create validation set of over 1500 ingredients
@@ -56,23 +78,30 @@ def main():
     # Create dataframes for each table
     ingredients_df = pd.DataFrame(list(all_ingredients), columns=['name'])
 
-    recipes_df = df.drop(columns=['ingredients', 'directions', 'source', 'NER']).rename(columns={'title': 'name'})
-    recipes_df['id'] = df.index
-    recipes_df = recipes_df[['id', 'name', 'link', 'site']]
+    recipes_df = df.drop(columns=['source']).rename(columns={'title': 'name'})
+    recipes_df['name'] = recipes_df['name'].apply(lambda x: remove_extra_whitespace(replace_non_alpha_parentheses(x)))
+    recipes_df = recipes_df[recipes_df['name'] != '']
+    recipes_df['directions'] = recipes_df['directions'].apply(remove_null_chars)
+    recipes_df = recipes_df.reset_index()
+    recipes_df['index'] = recipes_df.index
+    recipes_df = recipes_df.rename(columns = {'index': 'id'})
 
-    recipe_ingredients_df = df.explode('NER')
+    recipe_ingredients_df = recipes_df.copy()
+    recipe_ingredients_df = recipe_ingredients_df.explode('NER')
     recipe_ingredients_df['recipe_id'] = recipe_ingredients_df.index
-    recipe_ingredients_df = recipe_ingredients_df.drop(columns=['title', 'ingredients', 'directions', 'link', 'source', 'site']).rename(columns={'NER': 'ingredient'}).reset_index()
+    recipe_ingredients_df = recipe_ingredients_df.drop(columns=['name', 'ingredients', 'directions', 'link', 'site']).rename(columns={'NER': 'ingredient'}).reset_index()
     recipe_ingredients_df = recipe_ingredients_df[['recipe_id', 'ingredient']]
+
+    recipes_df = recipes_df.drop(columns=['NER'])
 
     logging.debug('Created dfs')
 
     # Populate tables
-    ingredients_df.to_sql('ingredients', engine, if_exists='append', index=False)
-    logging.debug('Populated ingredients table')
-
     recipes_df.to_sql('recipes', engine, if_exists='append', index=False)
     logging.debug('Populated recipes table')
+
+    ingredients_df.to_sql('ingredients', engine, if_exists='append', index=False)
+    logging.debug('Populated ingredients table')
 
     recipe_ingredients_df.to_sql('recipe_ingredients', engine, if_exists='append', index=False)
     logging.debug('Populated recipe_ingredients table')

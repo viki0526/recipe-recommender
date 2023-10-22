@@ -31,11 +31,15 @@ class Recipe(db.Model):
     __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    ingredients = db.Column(db.ARRAY(db.String)) 
+    directions = db.Column(db.ARRAY(db.String)) 
     link = db.Column(db.String)
     site = db.Column(db.String)
-    def __init__(self, id, name, link, site):
+    def __init__(self, id, name, ingredients, directions, link, site):
         self.id = id
         self.name = name
+        self.ingredients = ingredients
+        self.directions = directions
         self.link = link
         self.site = site
 
@@ -61,8 +65,6 @@ def main():
 @app.route('/search-ingredients', methods=['POST'])
 def search_ingredients():
     query = request.get_json().get("searchQuery")
-    logging.debug(f'REQUEST: {request.get_json().get("searchQuery")}')
-
     sql = text(
         "SELECT * FROM ingredients ORDER BY SIMILARITY(name, :str) DESC LIMIT 5;"
     )
@@ -70,6 +72,11 @@ def search_ingredients():
     logging.debug(result)
     result_list = [x.name for x in result]
     return jsonify(result_list), 200
+
+@app.route('/recipe-fuzzy', methods=['POST'])
+def recipe_fuzzy():
+    query = request.get_json().get("recipeSearchQuery")
+    
 
 @app.route('/recipes', methods=['POST'])
 def find_recipes():
