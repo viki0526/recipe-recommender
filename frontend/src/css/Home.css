@@ -4,6 +4,7 @@
 
 .home-container .recipe-search {
     justify-content: center;
+    margin-bottom: 8px !important;
 }
 
 .flex {
