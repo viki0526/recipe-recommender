@@ -5,7 +5,7 @@ import ast
 import re
 import inflect
 import json
-from app import Recipe, Ingredient, RecipeIngredient, db, app
+from app import Recipe, Ingredient, db, app
 from sqlalchemy import create_engine
 
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
@@ -82,17 +82,20 @@ def main():
     recipes_df['name'] = recipes_df['name'].apply(lambda x: remove_extra_whitespace(replace_non_alpha_parentheses(x)))
     recipes_df = recipes_df[recipes_df['name'] != '']
     recipes_df['directions'] = recipes_df['directions'].apply(remove_null_chars)
+    recipes_df = recipes_df.rename(columns = {'index': 'id', 'NER': 'ingredient_names'})
+    recipes_df = recipes_df.groupby('name').filter(lambda group: len(group) > 2)
     recipes_df = recipes_df.reset_index()
-    recipes_df['index'] = recipes_df.index
-    recipes_df = recipes_df.rename(columns = {'index': 'id'})
+    recipes_df['id'] = recipes_df.index
+    recipes_df = recipes_df[['id', 'name', 'ingredient_names', 'ingredients', 'directions', 'link', 'site']]
+    recipes_df['ingredient_names'] = recipes_df['ingredient_names'].apply(lambda x: list(x))
 
-    recipe_ingredients_df = recipes_df.copy()
-    recipe_ingredients_df = recipe_ingredients_df.explode('NER')
-    recipe_ingredients_df['recipe_id'] = recipe_ingredients_df.index
-    recipe_ingredients_df = recipe_ingredients_df.drop(columns=['name', 'ingredients', 'directions', 'link', 'site']).rename(columns={'NER': 'ingredient'}).reset_index()
-    recipe_ingredients_df = recipe_ingredients_df[['recipe_id', 'ingredient']]
+    # recipe_ingredients_df = recipes_df.copy()
+    # recipe_ingredients_df = recipe_ingredients_df.explode('NER')
+    # recipe_ingredients_df['recipe_id'] = recipe_ingredients_df.index
+    # recipe_ingredients_df = recipe_ingredients_df.drop(columns=['name', 'ingredients', 'directions', 'link', 'site']).rename(columns={'NER': 'ingredient'}).reset_index()
+    # recipe_ingredients_df = recipe_ingredients_df[['recipe_id', 'ingredient']]
 
-    recipes_df = recipes_df.drop(columns=['NER'])
+    # recipes_df = recipes_df.drop(columns=['NER'])
 
     logging.debug('Created dfs')
 
@@ -103,8 +106,8 @@ def main():
     ingredients_df.to_sql('ingredients', engine, if_exists='append', index=False)
     logging.debug('Populated ingredients table')
 
-    recipe_ingredients_df.to_sql('recipe_ingredients', engine, if_exists='append', index=False)
-    logging.debug('Populated recipe_ingredients table')
+    # recipe_ingredients_df.to_sql('recipe_ingredients', engine, if_exists='append', index=False)
+    # logging.debug('Populated recipe_ingredients table')
 
 if __name__ == '__main__':
     logging.basicConfig(filename='app.log', level=logging.DEBUG)

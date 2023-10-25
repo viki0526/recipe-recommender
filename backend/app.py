@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.orm import relationship
 import logging
-import json
+import re
 
 # Initializing flask app
 app = Flask(__name__)
@@ -25,12 +25,12 @@ def setup_postgres_extensions():
 with app.app_context():
     setup_postgres_extensions()
 
-
 # Define schema
 class Recipe(db.Model):
     __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    ingredient_names = db.Column(db.ARRAY(db.String), nullable=False)
     ingredients = db.Column(db.ARRAY(db.String)) 
     directions = db.Column(db.ARRAY(db.String)) 
     link = db.Column(db.String)
@@ -49,13 +49,13 @@ class Ingredient(db.Model):
     def __init__(self, name):
         self.name = name
 
-class RecipeIngredient(db.Model):
-    __tablename__ = 'recipe_ingredients'
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True)
-    ingredient = db.Column(db.String, db.ForeignKey('ingredients.name'), primary_key = True)
-    def __init__(self, recipe_id, ingredient):
-        self.recipe_id = recipe_id
-        self.ingredient = ingredient
+# class RecipeIngredient(db.Model):
+#     __tablename__ = 'recipe_ingredients'
+#     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True)
+#     ingredient = db.Column(db.String, db.ForeignKey('ingredients.name'), primary_key = True)
+#     def __init__(self, recipe_id, ingredient):
+#         self.recipe_id = recipe_id
+#         self.ingredient = ingredient
 
 # Define routes
 @app.route('/')
@@ -73,15 +73,26 @@ def search_ingredients():
     result_list = [x.name for x in result]
     return jsonify(result_list), 200
 
-@app.route('/recipe-fuzzy', methods=['POST'])
-def recipe_fuzzy():
-    query = request.get_json().get("recipeSearchQuery")
-    
+@app.route('/recipe-autocomplete', methods=['POST'])
+def recipe_autocomplete():
+    query = '%' + request.get_json().get("recipeSearchQuery") + '%'
+    sql = text(
+        "SELECT name FROM recipes WHERE name like :str GROUP BY name ORDER BY COUNT(*) DESC LIMIT 5;"
+    )
+    result = conn.execute(sql, {'str': query})
+    logging.debug(result)
+    result_list = [x.name for x in result]
+    return jsonify(result_list), 200
 
-@app.route('/recipes', methods=['POST'])
+@app.route('/recipe-search', methods=['POST'])
 def find_recipes():
-    logging.debug(request)
-    return 'test'
+    query = request.get_json().get("recipeSearchQuery")
+    sql = text(
+        "SELECT r.id, r.name, r.ingredient_names, r.ingredients, r.directions FROM recipes r WHERE r.name % :str LIMIT 100"
+    )
+    result = conn.execute(sql, {'str': query})
+    result_list = [{'id': x.id, 'name': x.name, 'ingredient_names': x.ingredient_names, 'ingredients': x.ingredients, 'directions': x.directions} for x in result]
+    return jsonify(result_list), 200
 
 # Run app
 if __name__ == '__main__':
