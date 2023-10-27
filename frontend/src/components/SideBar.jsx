@@ -1,29 +1,35 @@
 import React, {useState, useEffect} from 'react';
 import '../css/Filters.css';
 import { Dropdown, FormControl} from 'react-bootstrap';
+import { useDispatch } from 'react-redux';
+import { setIngredientFilters } from '../reducers/ingredientFilters';
 
 export default function SideBar () {
     const [selectedTags, setSelectedTags] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [options, setOptions] = useState([]);
 
+    const dispatch = useDispatch();
+
     // Ingredient Filter Functions --------------------------------
 
     const handleDropdownSelect = (e, selectedOption) => {
         e.preventDefault()
         if (!selectedTags.includes(selectedOption)) {
-            setSelectedTags([...selectedTags, selectedOption]);
+            const updatedTags = [...selectedTags, selectedOption]
+            setSelectedTags(updatedTags);
+            dispatch(setIngredientFilters(updatedTags));
         }
     };
 
     const handleTagRemove = (tagToRemove) => {
         const updatedTags = selectedTags.filter((tag) => tag !== tagToRemove);
         setSelectedTags(updatedTags);
+        dispatch(setIngredientFilters(updatedTags));
     };
 
     const handleSearch = (query) => {
         setSearchTerm(query);
-        console.log(query);
         fetch('http://127.0.0.1:5000/search-ingredients', {
             method: 'POST',
             headers: {

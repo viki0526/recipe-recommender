@@ -4,14 +4,20 @@ import SideBar from './SideBar';
 import { Dropdown, FormControl, Form, Container, Row, Col, Button } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import {useSearchParams} from 'react-router-dom'
+import { useSelector } from 'react-redux';
+
 
 export default function Home () {
+    // Component states
     const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
     const [recipeOptions, setRecipeOptions] = useState([]);
     const [recipeResults, setRecipeResults] = useState([]);
-    const [recipeSearchTokens, setRecipeSearchTokens] = useState([]);
 
+    // Access URl parameters
     const [searchParams, setSearchParams] = useSearchParams();
+
+    // Access redux state
+    const ingredientFilters = useSelector((state) => state.ingredientFilters);
 
     const removeExtraWhitespace = (inputString) => {
         const cleanedString = inputString.replace(/\s+/g, ' ').trim();
@@ -25,17 +31,19 @@ export default function Home () {
 
     useEffect(() => {
         var query = searchParams.get("recipeSearchQuery");
+        console.log(ingredientFilters)
+
         if (!query || query.length == 0) {
             return;
         }
+        setRecipeSearchTerm(query);
         query = removeExtraWhitespace(removeNonAlpha(query));
-        console.log(query)
         fetch('http://127.0.0.1:5000/recipe-search', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ recipeSearchQuery: query}),
+            body: JSON.stringify({ recipeSearchQuery: query, ingredientFilters: ingredientFilters}),
         })
         .then((response) => response.json())
         .then((data) => {
@@ -45,12 +53,11 @@ export default function Home () {
         .catch((error) => {
             console.error('Error:', error);
         });
-    }, [searchParams, setSearchParams]);
+    }, [searchParams, setSearchParams, ingredientFilters]);
 
     // Recipe Search Functions --------------------------------
 
     const handleRecipeAutoComplete = (query) => {
-        console.log('Autocomplete to be implemeted')
         setRecipeSearchTerm(query);
         // query = removeExtraWhitespace(removeNonAlpha(query));
         // if (query.length == 0) {
@@ -111,7 +118,7 @@ export default function Home () {
                                 ))}
                         </Form>
                         {recipeResults.map((option) => (
-                            <Card style={{margin: '25px 0px'}}>
+                            <Card key={option.id} id={option.id} style={{margin: '25px 0px'}}>
                                 <Card.Body>
                                     <Card.Title>{option.name}</Card.Title>
                                     <Card.Text>
