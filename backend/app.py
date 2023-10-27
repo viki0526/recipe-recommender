@@ -13,7 +13,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Dagger@localhost:
 
 db = SQLAlchemy(app)
 
-engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'], echo=True)
 conn = engine.connect() 
 
 logging.basicConfig(filename='app.log', level=logging.DEBUG)
@@ -86,14 +86,36 @@ def recipe_autocomplete():
 
 @app.route('/recipe-search', methods=['POST'])
 def find_recipes():
-    query = request.get_json().get("recipeSearchQuery")
-    sql = text(
-        "SELECT r.id, r.name, r.ingredient_names, r.ingredients, r.directions FROM recipes r WHERE r.name % :str LIMIT 100"
-    )
-    result = conn.execute(sql, {'str': query})
+    search_string = '%' + request.get_json().get("recipeSearchQuery") + '%'
+    ingredients_to_check = request.get_json().get("ingredientFilters")
+    sql_str = '''
+        SELECT id, name, ingredient_names, ingredients, directions
+        FROM recipes
+        WHERE name LIKE :name
+    '''
+    # Empty list check for ingredient filters
+    if ingredients_to_check:
+        sql_str += '''
+            AND EXISTS (
+            SELECT 1
+            FROM unnest(:ingredients) AS i(ingredient)
+            WHERE i.ingredient = ANY(ingredient_names)
+        )
+        AND NOT EXISTS (
+            SELECT 1
+            FROM unnest(:ingredients) AS i(ingredient)
+            WHERE i.ingredient <> ALL(ingredient_names)
+        )
+        '''
+    sql_str += '''LIMIT 100'''
+    sql = text(sql_str)
+    result = conn.execute(sql, {'name': search_string, 'ingredients': ingredients_to_check})
+    logging.debug(result)
     result_list = [{'id': x.id, 'name': x.name, 'ingredient_names': x.ingredient_names, 'ingredients': x.ingredients, 'directions': x.directions} for x in result]
     return jsonify(result_list), 200
 
 # Run app
 if __name__ == '__main__':
     app.run(debug=True)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
