@@ -49,14 +49,6 @@ class Ingredient(db.Model):
     def __init__(self, name):
         self.name = name
 
-# class RecipeIngredient(db.Model):
-#     __tablename__ = 'recipe_ingredients'
-#     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True)
-#     ingredient = db.Column(db.String, db.ForeignKey('ingredients.name'), primary_key = True)
-#     def __init__(self, recipe_id, ingredient):
-#         self.recipe_id = recipe_id
-#         self.ingredient = ingredient
-
 # Define routes
 @app.route('/')
 def main():
@@ -66,7 +58,7 @@ def main():
 def search_ingredients():
     query = request.get_json().get("searchQuery")
     sql = text(
-        "SELECT * FROM ingredients ORDER BY SIMILARITY(name, :str) DESC LIMIT 5;"
+        "SELECT * FROM ingredients ORDER BY SIMILARITY(name, :str) DESC LIMIT 10;"
     )
     result = conn.execute(sql, {'str': query})
     logging.debug(result)
@@ -91,23 +83,31 @@ def find_recipes():
     sql_str = '''
         SELECT id, name, ingredient_names, ingredients, directions
         FROM recipes
-        WHERE name LIKE :name
+        WHERE name ILIKE :name
     '''
     # Empty list check for ingredient filters
     if ingredients_to_check:
-        sql_str += '''
-            AND EXISTS (
-            SELECT 1
-            FROM unnest(:ingredients) AS i(ingredient)
-            WHERE i.ingredient = ANY(ingredient_names)
-        )
-        AND NOT EXISTS (
-            SELECT 1
-            FROM unnest(:ingredients) AS i(ingredient)
-            WHERE i.ingredient <> ALL(ingredient_names)
-        )
+        sql_str = '''
+            WITH r AS (
+                SELECT r.id, r.name, r.ingredient_names, r.ingredients, r.directions
+                FROM recipes r
+                WHERE r.name ILIKE :name
+            )
+            SELECT r.id, r.name, r.ingredient_names, r.ingredients, r.directions
+            FROM recipes r WHERE
+            NOT EXISTS (
+                SELECT i.ingredient
+                FROM unnest(:ingredients) AS i(ingredient)
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM unnest(r.ingredient_names) AS ing
+                    WHERE ing ILIKE '%' || i.ingredient || '%'
+                )
+            )
         '''
-    sql_str += '''LIMIT 100'''
+    sql_str += '''ORDER BY r.id 
+                LIMIT 100;
+                '''
     sql = text(sql_str)
     result = conn.execute(sql, {'name': search_string, 'ingredients': ingredients_to_check})
     logging.debug(result)
