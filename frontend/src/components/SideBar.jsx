@@ -1,31 +1,37 @@
 import React, {useState, useEffect} from 'react';
 import '../css/Filters.css';
 import { Dropdown, FormControl} from 'react-bootstrap';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setIngredientFilters } from '../reducers/ingredientFilters';
 
+import {persistor} from '../store'
+
 export default function SideBar () {
-    const [selectedTags, setSelectedTags] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [options, setOptions] = useState([]);
 
     const dispatch = useDispatch();
+    const ingredientFilters = useSelector((state) => state.ingredientFilters);
 
     // Ingredient Filter Functions --------------------------------
 
     const handleDropdownSelect = (e, selectedOption) => {
         e.preventDefault()
-        if (!selectedTags.includes(selectedOption)) {
-            const updatedTags = [...selectedTags, selectedOption]
-            setSelectedTags(updatedTags);
+        if (!ingredientFilters.includes(selectedOption)) {
+            const updatedTags = [...ingredientFilters, selectedOption]
             dispatch(setIngredientFilters(updatedTags));
+            persistor.flush().then(() => {
+                console.log('Updated local store')
+            }); //Save to localStorage
         }
     };
 
     const handleTagRemove = (tagToRemove) => {
-        const updatedTags = selectedTags.filter((tag) => tag !== tagToRemove);
-        setSelectedTags(updatedTags);
+        const updatedTags = ingredientFilters.filter((tag) => tag !== tagToRemove);
         dispatch(setIngredientFilters(updatedTags));
+        persistor.flush().then(() => {
+            console.log('Updated to local store')
+        }); //Save to localStorage
     };
 
     const handleSearch = (query) => {
@@ -49,7 +55,7 @@ export default function SideBar () {
     return (
         <div className='sidebar-container'>
             <div>
-            {selectedTags.map((tag) => (
+            {ingredientFilters.map((tag) => (
                 <span key={tag} className="tag">
                 {tag}
                 <button

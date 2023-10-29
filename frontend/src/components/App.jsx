@@ -5,6 +5,8 @@ import '../css/App.css';
 import Home from './Home';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+import RecipeDetails from './RecipeDetails'
+
 
 export default function App () {
 
@@ -12,6 +14,7 @@ export default function App () {
     <div className='app-container'>
       <Routes>
         <Route path="/" exact element={<Home />} />
+        <Route path="/details/:id" component={RecipeDetails} />
       </Routes>
     </div>
   );

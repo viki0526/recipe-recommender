@@ -59,29 +59,6 @@ export default function Home () {
 
     const handleRecipeAutoComplete = (query) => {
         setRecipeSearchTerm(query);
-        // query = removeExtraWhitespace(removeNonAlpha(query));
-        // if (query.length == 0) {
-        //     setRecipeOptions([]);
-        //     return;
-        // }
-        // const newTokens = query.split(' ');
-        // // console.log('fetching');
-        // // console.log(recipeSearchTokens)
-        // setRecipeSearchTokens(newTokens);
-        // fetch('http://127.0.0.1:5000/recipe-autocomplete', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify({ recipeSearchQuery: recipeSearchTokens.join(' ')}),
-        // })
-        // .then((response) => response.json())
-        // .then((data) => {
-        //     setRecipeOptions(data);
-        // })
-        // .catch((error) => {
-        //     console.error('Error:', error);
-        // });
     }
 
     const handleRecipeSearch = (key, searchTerm) => {
@@ -117,14 +94,14 @@ export default function Home () {
                                     </Dropdown.Item>
                                 ))}
                         </Form>
-                        {recipeResults.map((option) => (
-                            <Card key={option.id} id={option.id} style={{margin: '25px 0px'}}>
+                        {recipeResults.map((result) => (
+                            <Card key={result.id} id={result.id} style={{margin: '25px 0px'}}>
                                 <Card.Body>
-                                    <Card.Title>{option.name}</Card.Title>
+                                    <Card.Title>{result.name}</Card.Title>
                                     <Card.Text>
-                                        <b>Ingredients:</b> {option.ingredient_names.join(', ')}
+                                        <b>Ingredients:</b> {result.ingredient_names.join(', ')}
                                     </Card.Text>
-                                    <Button href="/recipe" variant="primary">View Recipe Details</Button>
+                                        <Button href={`/details/${result.id}`} variant="primary">View Recipe Details</Button>
                                 </Card.Body>
                             </Card>
                         ))}
