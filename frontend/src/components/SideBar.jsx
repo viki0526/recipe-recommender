@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import '../css/Filters.css';
 import { Dropdown, FormControl} from 'react-bootstrap';
+import Badge from 'react-bootstrap/Badge'
 import { useDispatch, useSelector } from 'react-redux';
 import { setIngredientFilters } from '../reducers/ingredientFilters';
 
@@ -54,20 +55,7 @@ export default function SideBar () {
 
     return (
         <div className='sidebar-container'>
-            <div>
-            {ingredientFilters.map((tag) => (
-                <span key={tag} className="tag">
-                {tag}
-                <button
-                    className="tag-remove"
-                    onClick={() => handleTagRemove(tag)}
-                >
-                    X
-                </button>
-                </span>
-            ))}
-            </div>
-            <Dropdown autoClose={false}>
+            <Dropdown autoClose={false} style={{'margin-bottom': '15px'}}>
             <Dropdown.Toggle variant="success" id="dropdown-basic">
                 Select Ingredients
             </Dropdown.Toggle>
@@ -90,6 +78,13 @@ export default function SideBar () {
                     ))}
                 </Dropdown.Menu>
             </Dropdown>
+            <div>
+                {ingredientFilters.map((tag) => (
+                    <Badge pill bg="primary" key={tag} style={{ padding: '7px', margin: '3px' }}>
+                    {tag} <Badge bg="secondary" style={{ cursor: 'pointer' }} onClick={() => handleTagRemove(tag)}> X </Badge>
+                    </Badge>
+                ))}
+            </div>
         </div>
     )
 }
