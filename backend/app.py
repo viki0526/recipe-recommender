@@ -84,6 +84,7 @@ def find_recipes():
         SELECT id, name, ingredient_names, ingredients, directions
         FROM recipes
         WHERE name ILIKE :name
+        ORDER BY id
     '''
     # Empty list check for ingredient filters
     if ingredients_to_check:
@@ -92,9 +93,10 @@ def find_recipes():
                 SELECT r.id, r.name, r.ingredient_names, r.ingredients, r.directions
                 FROM recipes r
                 WHERE r.name ILIKE :name
+                ORDER BY r.id
             )
             SELECT r.id, r.name, r.ingredient_names, r.ingredients, r.directions
-            FROM recipes r WHERE
+            FROM r WHERE
             NOT EXISTS (
                 SELECT i.ingredient
                 FROM unnest(:ingredients) AS i(ingredient)
@@ -105,9 +107,7 @@ def find_recipes():
                 )
             )
         '''
-    sql_str += '''ORDER BY r.id 
-                LIMIT 100;
-                '''
+    sql_str += '''LIMIT 100;'''
     sql = text(sql_str)
     result = conn.execute(sql, {'name': search_string, 'ingredients': ingredients_to_check})
     logging.debug(result)
