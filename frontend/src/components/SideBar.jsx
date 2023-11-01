@@ -55,9 +55,9 @@ export default function SideBar () {
 
     return (
         <div className='sidebar-container'>
-            <Dropdown autoClose={false} style={{'margin-bottom': '15px'}}>
+            <Dropdown autoClose={false} style={{marginBottom: '15px'}}>
             <Dropdown.Toggle variant="success" id="dropdown-basic">
-                Select Ingredients
+                Filter by Ingredients
             </Dropdown.Toggle>
                 <Dropdown.Menu style={{ maxHeight: '200px', overflowY: 'auto' }}>
                     <FormControl

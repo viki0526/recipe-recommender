@@ -1,0 +1,4 @@
+.sidebar-container,
+.sidebar-container .dropdown {
+    width: fit-content;
+}

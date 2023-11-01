@@ -5,18 +5,25 @@ import '../css/App.css';
 import Home from './Home';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+import NavComponent from './NavComponent'
 import RecipeDetails from './RecipeDetails'
+import SignupPage from './SignupPage'
 
 
 export default function App () {
 
   return (
-    <div className='app-container'>
-      <Routes>
-        <Route path="/" exact element={<Home />} />
-        <Route path="/details/:id" component={RecipeDetails} />
-      </Routes>
-    </div>
+    <>
+      <NavComponent />
+      <div className='app-container'>
+        <Routes>
+          <Route path="/" exact element={<Home />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/details/:id" element={<RecipeDetails />} />
+        </Routes>
+      </div>
+    </>
+    
   );
 }
 
