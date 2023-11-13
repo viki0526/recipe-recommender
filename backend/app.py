@@ -5,11 +5,17 @@ from sqlalchemy import text
 from sqlalchemy.orm import relationship
 import logging
 import re
+import json
+
+# Load settings
+with open('settings.json', 'r') as file:
+    settings = json.load(file)
+postgres_settings = settings.get('postgres_settings', {})
 
 # Initializing flask app
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Dagger@localhost:5432/RecipesApp'
+app.config['SQLALCHEMY_DATABASE_URI'] = postgres_settings.get('postgres_uri', 'postgresql://postgres:Dagger@localhost:5432/RecipesApp')
 
 db = SQLAlchemy(app)
 

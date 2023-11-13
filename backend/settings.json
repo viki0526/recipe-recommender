@@ -1,0 +1,5 @@
+{
+    "postgres_settings": {
+        "postgres_uri": "postgresql://postgres:Dagger@localhost:5432/RecipesApp"
+    }
+}
