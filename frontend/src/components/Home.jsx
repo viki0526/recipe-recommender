@@ -3,7 +3,7 @@ import '../css/Home.css';
 import SideBar from './SideBar';
 import { Dropdown, FormControl, Form, Container, Row, Col, Button } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
-import {useSearchParams} from 'react-router-dom'
+import {useSearchParams, Link} from 'react-router-dom'
 import { useSelector } from 'react-redux';
 
 
@@ -101,7 +101,17 @@ export default function Home () {
                                     <Card.Text>
                                         <b>Ingredients:</b> {result.ingredient_names.join(', ')}
                                     </Card.Text>
-                                        <Button href={`/details/${result.id}`} variant="primary">View Recipe Details</Button>
+                                        <Link to={`/details/${result.id}`}
+                                                state={{ 
+                                                    name: result.name,
+                                                    ingredients: result.ingredients,
+                                                    directions: result.directions
+                                                }}
+                                                key={result.id}
+                                                reloadDocument={false}
+                                        >
+                                            <Button variant="primary">View Recipe Details</Button>
+                                        </Link>
                                 </Card.Body>
                             </Card>
                         ))}
