@@ -1,5 +1,5 @@
 # recipe-recommender
-Extract features from natural language recipes dataset and recommend based on features (eg. ingredients, calories, macronutrients etc)
+Extract features from natural language recipes dataset and recommend recipes based on features (eg. ingredients, calories, macronutrients etc)
 # Setup instructions
 - Install python dependencies (Ensure you have Python 3.9 installed)
 ```
